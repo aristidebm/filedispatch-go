@@ -1,7 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/fs"
 	"log"
+	"math/rand"
+	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -10,13 +15,15 @@ type Router interface {
 	Route(mes Message)
 }
 type WatchOption struct {
-	recursive   bool
-	ignoredDirs []string
+	recursive       bool
+	processExisting bool
+	ignoredDirs     map[string]struct{}
 }
 
 var DefaultWatcherOption = &WatchOption{
-	recursive:   false,
-	ignoredDirs: []string{".git"},
+	recursive:       false,
+	processExisting: false,
+	ignoredDirs:     map[string]struct{}{".git": {}},
 }
 
 type DefaultWatcher struct {
@@ -35,12 +42,34 @@ func (watcher *DefaultWatcher) Watch(store string, options WatchOption) error {
 }
 
 func (watcher *DefaultWatcher) getPaths(store string, options WatchOption) []string {
-	paths := []string{store}
+	if !options.recursive {
+		return []string{store}
+	}
+	return walk(store, options.ignoredDirs)
+}
+
+func walk(store string, ignoreDirs map[string]struct{}) []string {
+	paths := []string{}
+	filepath.WalkDir(store, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			log.Printf("Something went wrong with the directory %v, permission perhaps ? The directory will not be watched", err)
+			return err
+		}
+		if _, ok := ignoreDirs[path]; !d.IsDir() || ok {
+			return err
+		}
+		paths = append(paths, path)
+		return nil
+	})
 	return paths
 }
 
 func (watcher *DefaultWatcher) watch(paths []string, mes chan Message) {
-	log.Printf("Listening to paths %v", paths)
+	prettyPrint, err := PrettyPrint(paths)
+	if err != nil {
+		prettyPrint = fmt.Sprintf("%v", paths)
+	}
+	log.Printf("Listening to changes into paths\n%s", prettyPrint)
 
 	defer watcher.Close()
 
@@ -100,7 +129,17 @@ func (watcher *DefaultWatcher) handleError(err error) {
 }
 
 func (watcher *DefaultWatcher) getDestination(filename string) (string, error) {
-	return filename, nil
+	protocols := []string{"http", "ftp", "file"}
+	index := rand.Intn(len(protocols))
+	return protocols[index] + ":" + "/" + filename, nil
+}
+
+func PrettyPrint(v interface{}) (string, error) {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 func NewWatcher(routers ...Router) (*DefaultWatcher, error) {

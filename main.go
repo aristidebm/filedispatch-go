@@ -28,5 +28,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Internal Error. Cannot watch any directory, retry later")
 	}
-	watcher.Watch(store, *DefaultWatcherOption)
+	option := WatchOption{
+		recursive:   true,
+		ignoredDirs: map[string]struct{}{".git": {}, "__py_cache__": {}},
+	}
+	watcher.Watch(store, option)
 }

@@ -1,6 +1,9 @@
 package main
 
-import "log"
+import (
+	"log"
+	"strings"
+)
 
 type Processor struct {
 	queue []Message
@@ -14,16 +17,16 @@ type LocalWorker struct {
 	Processor
 }
 
-func (worker *LocalWorker) GetName() string { return "file" }
+func (worker *LocalWorker) GetName() string { return strings.ToLower("file") }
 
 type HttpWorker struct {
 	Processor
 }
 
-func (worker *HttpWorker) GetName() string { return "http" }
+func (worker *HttpWorker) GetName() string { return strings.ToLower("http") }
 
 type FtpWorker struct {
 	Processor
 }
 
-func (worker *FtpWorker) GetName() string { return "ftp" }
+func (worker *FtpWorker) GetName() string { return strings.ToLower("ftp") }

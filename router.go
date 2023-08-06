@@ -25,7 +25,7 @@ func (router *DefaultRouter) Route(mes Message) {
 		log.Printf("Unsupported protocol %s. Cannot route the message %v.", name, mes)
 	}
 	worker.Process(mes)
-	log.Printf("The message %v is routed", mes)
+	log.Printf("The message %v is routed to %s worker", mes, name)
 }
 
 func (router *DefaultRouter) getProtocol(path string) (string, error) {
@@ -35,8 +35,9 @@ func (router *DefaultRouter) getProtocol(path string) (string, error) {
 	}
 	scheme := parsedUrl.Scheme
 	if scheme == "" {
-		scheme = "file"
+		scheme = strings.ToLower("file")
 	}
+	log.Printf("The parsed url is as follow %v", parsedUrl)
 	return strings.ToLower(scheme), nil
 }
 
@@ -45,9 +46,9 @@ func NewRouter() *DefaultRouter {
 	localWorker := LocalWorker{}
 	workers[localWorker.GetName()] = &localWorker
 	httpWorker := HttpWorker{}
-	workers[localWorker.GetName()] = &httpWorker
+	workers[httpWorker.GetName()] = &httpWorker
 	ftpWorker := FtpWorker{}
-	workers[localWorker.GetName()] = &ftpWorker
+	workers[ftpWorker.GetName()] = &ftpWorker
 	router := &DefaultRouter{
 		workers: workers,
 	}
