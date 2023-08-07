@@ -31,8 +31,8 @@ type DefaultWatcher struct {
 	router Router
 }
 
-func (watcher *DefaultWatcher) Watch(store string, options WatchOption) error {
-	paths := watcher.getPaths(store, options)
+func (watcher *DefaultWatcher) Watch(root string, options WatchOption) error {
+	paths := watcher.getPaths(root, options)
 	messages := make(chan Message)
 	go watcher.watch(paths, messages)
 	for mes := range messages {
@@ -41,16 +41,16 @@ func (watcher *DefaultWatcher) Watch(store string, options WatchOption) error {
 	return nil
 }
 
-func (watcher *DefaultWatcher) getPaths(store string, options WatchOption) []string {
+func (watcher *DefaultWatcher) getPaths(root string, options WatchOption) []string {
 	if !options.recursive {
-		return []string{store}
+		return []string{root}
 	}
-	return walk(store, options.ignoredDirs)
+	return walk(root, options.ignoredDirs)
 }
 
-func walk(store string, ignoreDirs map[string]struct{}) []string {
+func walk(root string, ignoreDirs map[string]struct{}) []string {
 	paths := []string{}
-	filepath.WalkDir(store, func(path string, d fs.DirEntry, err error) error {
+	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Printf("Something went wrong with the directory %v, permission perhaps ? The directory will not be watched", err)
 			return err

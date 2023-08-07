@@ -7,7 +7,7 @@ import (
 )
 
 type Worker interface {
-	Process(mes Message)
+	ProcessMessage(mes Message)
 	GetName() string
 }
 
@@ -24,7 +24,7 @@ func (router *DefaultRouter) Route(mes Message) {
 	if !ok {
 		log.Printf("Unsupported protocol %s. Cannot route the message %v.", name, mes)
 	}
-	worker.Process(mes)
+	worker.ProcessMessage(mes)
 	log.Printf("The message %v is routed to %s worker", mes, name)
 }
 
@@ -41,16 +41,20 @@ func (router *DefaultRouter) getProtocol(path string) (string, error) {
 	return strings.ToLower(scheme), nil
 }
 
-func NewRouter() *DefaultRouter {
-	workers := make(map[string]Worker)
-	localWorker := LocalWorker{}
-	workers[localWorker.GetName()] = &localWorker
-	httpWorker := HttpWorker{}
-	workers[httpWorker.GetName()] = &httpWorker
-	ftpWorker := FtpWorker{}
-	workers[ftpWorker.GetName()] = &ftpWorker
-	router := &DefaultRouter{
-		workers: workers,
+func (router *DefaultRouter) initWorkers() {
+	router.workers = map[string]Worker{}
+	workers := []Worker{&LocalWorker{}, &HttpWorker{}, &FtpWorker{}}
+	for _, worker := range workers {
+		router.registerWorker(worker)
 	}
+}
+
+func (router *DefaultRouter) registerWorker(worker Worker) {
+	router.workers[worker.GetName()] = worker
+}
+
+func NewRouter() *DefaultRouter {
+	router := &DefaultRouter{}
+	router.initWorkers()
 	return router
 }

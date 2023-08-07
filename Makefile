@@ -1,4 +1,4 @@
-STORE := "/mnt/axione/data/files"
+ROOT := "/mnt/axione/data/files"
 
 BIN = "dist/filedispatch"
 
@@ -8,5 +8,8 @@ help:
 build:
 	go build -o $(BIN)
 
+format:
+	go fmt -x
+
 run: build
-	$(BIN) $(STORE)
+	$(BIN) $(ROOT)

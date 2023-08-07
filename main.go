@@ -16,7 +16,7 @@ func (mes Message) String() string {
 }
 
 type Watcher interface {
-	Watch(store string, options WatchOption) error
+	Watch(root string, options WatchOption) error
 }
 
 func main() {
