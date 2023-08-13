@@ -11,5 +11,8 @@ build:
 format:
 	go fmt -x
 
+test:
+	go test -coverprofile=coverage
+
 run: build
 	$(BIN) $(ROOT)

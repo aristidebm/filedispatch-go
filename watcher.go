@@ -36,11 +36,11 @@ func (watcher *DefaultWatcher) Watch(root string, options WatchOption) error {
 	messages := make(chan Message)
 	go watcher.watch(paths, messages)
 	for {
-        mes, ok := <- messages
-        // The message channel was closed.
-        if !ok {
-            return nil
-        }
+		mes, ok := <-messages
+		// The message channel was closed.
+		if !ok {
+			return nil
+		}
 		watcher.router.Route(mes)
 	}
 }
@@ -84,14 +84,14 @@ func (watcher *DefaultWatcher) watch(paths []string, mes chan Message) {
 		for {
 			select {
 			case event, ok := <-watcher.Events:
-            // The watcher is closed
-			if !ok { 
-                    close(mes)
+				// The watcher is closed
+				if !ok {
+					close(mes)
 					return
 				}
 				watcher.handleEvent(event, mes)
 			case err, ok := <-watcher.Errors:
-            // The watcher is closed
+				// The watcher is closed
 				if !ok {
 					return
 				}
