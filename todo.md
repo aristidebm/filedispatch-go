@@ -1,4 +1,5 @@
 - [ ] Parse the configuration file.
+
 The config file look like the file below. 
 
 ```yaml

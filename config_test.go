@@ -7,11 +7,8 @@ import (
 func TestConfigDestinationCanBeEmpty(t *testing.T) {
 
 	config := `
-{
-    "source": "/tmp",
-    "destination": []
-}
-`
+source: /tmp
+destination: []`
 	configObj, err := ParseConfig(config)
 
 	if err != nil {
@@ -31,19 +28,14 @@ func TestConfigDestinationCanBeEmpty(t *testing.T) {
 	}
 }
 
-func TestParseConfigWithNonEmptyDestionation(t *testing.T) {
+func TestParseConfigWithNonEmptyDestination(t *testing.T) {
 
 	config := `
-{
-    "source": "/tmp",
-    "destination": [
-        {
-            "path": "/home/user/Videos",
-            "pattern": ["*.mp4", "*.webm"]
-        }
-    ]
-}
-`
+source: /tmp
+destination:
+  - path: /home/user/Videos
+    pattern: ["*.mp4", "*.webm"]`
+
 	configObj, err := ParseConfig(config)
 
 	if err != nil {
@@ -64,7 +56,6 @@ func TestParseConfigWithNonEmptyDestionation(t *testing.T) {
 		t.Errorf("Expected the Path of %v to be %s, but got %s", d, expectedPath, d.Path)
 	}
 
-	// expectedPattern := []string {"*.mp4", "*.webm"}
 	if len(configObj.Destination) == 0 {
 		t.Error("Expected config destination to be not empty")
 	}
@@ -78,19 +69,13 @@ func TestParseConfigWithNonEmptyDestionation(t *testing.T) {
 	}
 }
 
-func TestConfigMustDestinationWithEmptyPattern(t *testing.T) {
+func TestConfigCanContainDestinationWithEmptyPattern(t *testing.T) {
 
 	config := `
-{
-    "source": "/tmp",
-    "destination": [
-        {
-            "path": "/home/user/Videos",
-            "pattern": []
-        }
-    ]
-}
-`
+source: /tmp
+destination:
+  - path: /home/user/Videos
+    pattern: []`
 
 	configObj, err := ParseConfig(config)
 
@@ -130,15 +115,10 @@ func TestConfigMustDestinationWithEmptyPattern(t *testing.T) {
 func TestConfigMustContainASource(t *testing.T) {
 
 	config := `
-{
-    "destination": [
-        {
-            "path": "/home/user/Videos",
-            "pattern": ["*.mp4", "*.webm"]
-        }
-    ]
-}
-`
+destination:
+  - path: /home/user/Videos
+    pattern: []`
+
 	_, err := ParseConfig(config)
 
 	if err == nil {
@@ -150,16 +130,11 @@ func TestConfigMustContainASource(t *testing.T) {
 func TestConfigDestinationMustContainAPath(t *testing.T) {
 
 	config := `
-{
-    "source": "/tmp",
-    "destination": [
-        {
-            "path": "",
-            "pattern": ["*.mp4", "*.webm"]
-        }
-    ]
-}
-`
+source: /tmp
+destination:
+  - path: /home/user/Videos
+    pattern: [*.mp4]`
+
 	_, err := ParseConfig(config)
 
 	if err == nil {
@@ -171,16 +146,11 @@ func TestConfigDestinationMustContainAPath(t *testing.T) {
 func TestConfigSourceDirPathMustExists(t *testing.T) {
 
 	config := `
-{
-    "source": "/unknown",
-    "destination": [
-        {
-            "path": "/home/user/Videos",
-            "pattern": []
-        }
-    ]
-}
-`
+source: /unknown
+destination:
+  - path: /home/user/Videos
+    pattern: [*.mp4]`
+
 	_, err := ParseConfig(config)
 
 	if err == nil {
