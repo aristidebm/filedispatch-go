@@ -16,20 +16,7 @@ type Config struct {
 }
 
 func ParseConfig(config string) (*Config, error) {
-	// TODO:
-	// https://medium.com/thedevproject/easy-de-serialisation-of-yaml-files-in-go-4557456b0a98
-	// + Accept string that contains yaml tags using gopkg.in/yaml/v3.
-	// + Convert this string into it's json equivalent.
-	// + Pass it to go-playground/validator.
-
 	configObj := Config{}
-
-	// configByte, _ := os.ReadFile("/tmp/config.yml")
-	// vf := []byte(config)
-
-	// log.Println(len(vf))
-	// log.Println("--------------------------------------------------")
-	// log.Println(len(configByte))
 
 	if err := yaml.Unmarshal([]byte(config), &configObj); err != nil {
 		return &configObj, err

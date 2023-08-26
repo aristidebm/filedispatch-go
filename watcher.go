@@ -168,3 +168,23 @@ func NewWatcher(routers ...Router) (*DefaultWatcher, error) {
 		router:  NewRouter(),
 	}, nil
 }
+
+/*
+Probleme:
+
+Il se fait que la config yaml que nous avons mise en place est un  concept qui a trait a un
+type spécifique de router et non au watcher (qui est l'élement central de notre architecture).
+Il peut exister des routers qui n'ont pas besoin de fichier de configuration, donc on ne peut
+et ne doit les faire dépendre d'une config dont ils n'ont aucunement besoin. Alors quelles sont
+les approches de solution pour pallier a ce probleme  ?
+
+1. Je pense a un truc qui consiste a séparer les Router en ConfigRouter a Router, tel
+que le ConfigRouter est un router spécifique qui a besoin qui a besoin d'un parametre
+config dans sa factory Method, lui permettant de recuperer la config, la config pouvant
+etre stockée dans un fichier ou dans une base de données.
+
+2. On sait que le watcher peut recevoir un router a paremetre, et dans ce cas, on utilisera
+ce dernier, dans le cas contraire on utilise le routeur par défaut qui lui a besoin d'un
+fichier de configuration yaml pour fonctionner. (Je trouve cette approche plus élégante, dans
+	le future, si nécessaire, on peut recevoir le contexte de l'éxtérieur.
+*/

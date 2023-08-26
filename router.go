@@ -43,7 +43,7 @@ func (router *DefaultRouter) getProtocol(path string) (string, error) {
 
 func (router *DefaultRouter) initWorkers() {
 	router.workers = map[string]Worker{}
-	workers := []Worker{&LocalWorker{}, &HttpWorker{}, &FtpWorker{}}
+	workers := []Worker{&LocalWorker{}, &SftpWorker{}}
 	for _, worker := range workers {
 		router.registerWorker(worker)
 	}

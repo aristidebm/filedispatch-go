@@ -38,14 +38,8 @@ type LocalWorker struct {
 
 func (worker *LocalWorker) GetName() string { return strings.ToLower("file") }
 
-type HttpWorker struct {
+type SftpWorker struct {
 	Processor
 }
 
-func (worker *HttpWorker) GetName() string { return strings.ToLower("http") }
-
-type FtpWorker struct {
-	Processor
-}
-
-func (worker *FtpWorker) GetName() string { return strings.ToLower("ftp") }
+func (worker *SftpWorker) GetName() string { return strings.ToLower("ftp") }
