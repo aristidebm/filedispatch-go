@@ -53,7 +53,7 @@ func (router *DefaultRouter) registerWorker(worker Worker) {
 	router.workers[worker.GetName()] = worker
 }
 
-func NewRouter() *DefaultRouter {
+func NewRouter(config Config) *DefaultRouter {
 	router := &DefaultRouter{}
 	router.initWorkers()
 	return router

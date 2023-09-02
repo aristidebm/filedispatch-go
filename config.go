@@ -15,18 +15,18 @@ type Config struct {
 	Destination []Destination `json:"destination" validate:"required,dive"`
 }
 
-func ParseConfig(config string) (*Config, error) {
+func ParseConfig(config string) (Config, error) {
 	configObj := Config{}
 
 	if err := yaml.Unmarshal([]byte(config), &configObj); err != nil {
-		return &configObj, err
+		return configObj, err
 	}
 
 	validate := validator.New()
 
 	if err := validate.Struct(&configObj); err != nil {
-		return &configObj, err
+		return configObj, err
 	}
 
-	return &configObj, nil
+	return configObj, nil
 }

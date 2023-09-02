@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"math/rand"
+	"os"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
@@ -121,7 +122,7 @@ func (watcher *DefaultWatcher) handleEvent(event fsnotify.Event, mes chan Messag
 	destination, err := watcher.getDestination(filename)
 
 	if err != nil {
-		log.Printf("Cannot find the destination of the file %s. The file %s is ignored", filename, filename)
+		log.Printf("The file %s is ignored because it's destination cannot be found", filename, filename)
 		return
 	}
 
@@ -149,42 +150,31 @@ func PrettyPrint(v interface{}) (string, error) {
 	return string(b), nil
 }
 
-func NewWatcher(routers ...Router) (*DefaultWatcher, error) {
+func NewWatcher(router Router) (*DefaultWatcher, error) {
 	fsWatcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(routers) > 0 {
-		return &DefaultWatcher{
-			Watcher: fsWatcher,
-			router:  routers[0],
-		}, nil
-	}
-
-	return &DefaultWatcher{
-		Watcher: fsWatcher,
-		router:  NewRouter(),
-	}, nil
+	watcher := DefaultWatcher{Watcher: fsWatcher, router: router}
+	return &watcher, nil
 }
 
-/*
-Probleme:
+func NewWatcherWithDefaultRouter(configPath string) (*DefaultWatcher, error) {
+	content, err := os.ReadFile(configPath)
 
-Il se fait que la config yaml que nous avons mise en place est un  concept qui a trait a un
-type spécifique de router et non au watcher (qui est l'élement central de notre architecture).
-Il peut exister des routers qui n'ont pas besoin de fichier de configuration, donc on ne peut
-et ne doit les faire dépendre d'une config dont ils n'ont aucunement besoin. Alors quelles sont
-les approches de solution pour pallier a ce probleme  ?
+	if err != nil {
+		return nil, err
+	}
 
-1. Je pense a un truc qui consiste a séparer les Router en ConfigRouter a Router, tel
-que le ConfigRouter est un router spécifique qui a besoin qui a besoin d'un parametre
-config dans sa factory Method, lui permettant de recuperer la config, la config pouvant
-etre stockée dans un fichier ou dans une base de données.
+	configStr := string(content)
 
-2. On sait que le watcher peut recevoir un router a paremetre, et dans ce cas, on utilisera
-ce dernier, dans le cas contraire on utilise le routeur par défaut qui lui a besoin d'un
-fichier de configuration yaml pour fonctionner. (Je trouve cette approche plus élégante, dans
-	le future, si nécessaire, on peut recevoir le contexte de l'éxtérieur.
-*/
+	config, err := ParseConfig(configStr)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewWatcher(NewRouter(config))
+}
