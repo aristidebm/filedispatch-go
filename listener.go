@@ -1,4 +1,4 @@
-package main
+package filedispatch
 
 import (
 	"fmt"
@@ -11,23 +11,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-func main() {
-	mux := NewFakeMux()
-	listener, err := NewListener(mux)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	listener = listener.WithRecursive(true).WithIgnoreDirs(
-		"dir2",
-		"dir3",
-	)
-	if err = listener.Listen("/tmp/storage"); err != nil {
-		log.Fatal(err)
-	}
-}
-
 type Router interface {
 	Route(path string) error
 }
@@ -39,15 +22,8 @@ type listenerOption struct {
 }
 
 func newListenerOption() (*listenerOption, error) {
-	git, err := regexp.Compile(".git")
-
-	if err != nil {
-		return nil, err
-	}
-
 	return &listenerOption{
-		recursive:  false,
-		ignoreDirs: []*regexp.Regexp{git},
+		recursive: false,
 	}, nil
 }
 
@@ -222,15 +198,4 @@ func (l Listener) WithIgnoreFiles(value ...string) Listener {
 		l.option.ignoreFiles = append(l.option.ignoreFiles, p)
 	}
 	return l
-}
-
-type FakeMux struct{}
-
-func (m FakeMux) Route(path string) error {
-	log.Printf("Routing %s", path)
-	return nil
-}
-
-func NewFakeMux() *FakeMux {
-	return &FakeMux{}
 }

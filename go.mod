@@ -1,4 +1,4 @@
-module example.com/filedispatch
+module example.com/project/filedispatch
 
 go 1.21.1
 
