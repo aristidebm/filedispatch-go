@@ -19,8 +19,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	listener = listener.WithRecursive(true).WithIgnoreDirs("systemd-private-6bdc70ef763547798527d127b2bdd2dd-polkit.service-sckdeu")
-	if err = listener.Listen("/tmp"); err != nil {
+	listener = listener.WithRecursive(true).WithIgnoreDirs(
+		"dir2",
+		"dir3",
+	)
+	if err = listener.Listen("/tmp/storage"); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -73,21 +76,19 @@ func (l Listener) getPaths(path string) ([]string, error) {
 func (l Listener) walk(root string) ([]string, error) {
 	paths := []string{}
 
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-
+	err := filepath.WalkDir(root, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("cannot listen to subdirectories of the directory %s (reason: %s)", root, err.Error())
 		}
 
-		// TODO: ignore files and symlinks
-		for _, p := range l.option.ignoreDirs {
-			if p.FindString(path) != "" {
-				continue
-			}
+		// We are only interested in Dirs
+		if !info.IsDir() {
+			return nil
 		}
 
-		fmt.Println(path)
-		paths = append(paths, path)
+		if l.canWatchDir(path) {
+			paths = append(paths, path)
+		}
 
 		return nil
 	})
@@ -97,6 +98,24 @@ func (l Listener) walk(root string) ([]string, error) {
 	}
 
 	return paths, nil
+}
+
+func (l Listener) canWatchDir(path string) bool {
+	for _, p := range l.option.ignoreDirs {
+		if p.MatchString(path) {
+			return false
+		}
+	}
+	return true
+}
+
+func (l Listener) canHandleFile(path string) bool {
+	for _, p := range l.option.ignoreFiles {
+		if p.MatchString(path) {
+			return false
+		}
+	}
+	return true
 }
 
 func (l Listener) watch(paths []string) error {
@@ -186,7 +205,6 @@ func (l Listener) WithIgnoreDirs(value ...string) Listener {
 			log.Printf("cannot ignore dir %s (reason: %s)", v, err.Error())
 			continue
 		}
-
 		l.option.ignoreDirs = append(l.option.ignoreDirs, p)
 	}
 	return l
