@@ -91,7 +91,7 @@ func TestRecusrvice(t *testing.T) {
 	paths, err := listener.getPaths(tmpDir)
 
 	if err != nil {
-		log.Printf("unable paths")
+		log.Printf("unable to get paths (reason: %v)", err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func TestRecusrvice(t *testing.T) {
 	paths, err = listener.getPaths(tmpDir)
 
 	if err != nil {
-		log.Printf("unable to get the paths")
+		log.Printf("unable to get paths (reason: %v)", err)
 		return
 	}
 	expected := []string{tmpDir, filepath.Join(tmpDir, "dir"), filepath.Join(tmpDir, "dir/to"), filepath.Join(tmpDir, "dir/to/walk")}
@@ -110,12 +110,88 @@ func TestRecusrvice(t *testing.T) {
 	assert.Equal(t, paths, expected)
 }
 
-func TestRecusrviceAndIgnoreDir(t *testing.T) {
-	//
+func TestRecursiveAndIgnoreDir(t *testing.T) {
+	tmpDir, err := prepareTestDirTree("dir/to/walk/")
+
+	if err != nil {
+		fmt.Printf("unable to create test dir tree: %v\n", err)
+		return
+	}
+
+	defer os.RemoveAll(tmpDir)
+
+	router := FakeRouter{}
+	listener, err := NewListener(router)
+
+	if err != nil {
+		log.Printf("unable to instiante the listener")
+		return
+	}
+
+	listener = listener.WithRecursive(true).WithIgnoreDirs(filepath.Join(tmpDir, "dir/to/walk"))
+	paths, err := listener.getPaths(tmpDir)
+
+	if err != nil {
+		log.Printf("unable to get paths (reason: %v)", err)
+		return
+	}
+
+	assert.Len(t, paths, 3)
+	expected := []string{tmpDir, filepath.Join(tmpDir, "dir"), filepath.Join(tmpDir, "dir/to")}
+	assert.Equal(t, paths, expected)
+
+	listener = listener.WithRecursive(false)
+	paths, err = listener.getPaths(tmpDir)
+
+	if err != nil {
+		log.Printf("unable to get paths (reason: %v)", err)
+		return
+	}
+	assert.Len(t, paths, 1)
+	assert.Equal(t, paths, []string{tmpDir})
 }
 
-func TestRecusrviceAndIgnoreFile(t *testing.T) {
-	//
+func TestWatchDirOnly(t *testing.T) {
+	tmpDir, err := prepareTestDirTree("dir/to/walk/")
+
+	if err != nil {
+		fmt.Printf("unable to create test dir tree: (reason: %v)\n", err)
+		return
+	}
+
+	defer os.RemoveAll(tmpDir)
+
+	f, err := os.Create(filepath.Join(tmpDir, "example.txt"))
+
+	if err != nil {
+		fmt.Printf("unable to create test file: (reason: %v)\n", err)
+		return
+	}
+
+	// defer called are stacked, so this is called
+	// before the former one and that is what we want
+	defer f.Close()
+
+	router := FakeRouter{}
+	listener, err := NewListener(router)
+
+	if err != nil {
+		log.Printf("unable to instiante the listener (reason: %v)", err)
+		return
+	}
+
+	listener = listener.WithRecursive(true)
+
+	paths, err := listener.getPaths(tmpDir)
+
+	if err != nil {
+		log.Printf("unable to get paths (reason: %v)", err)
+		return
+	}
+
+	expected := []string{tmpDir, filepath.Join(tmpDir, "dir"), filepath.Join(tmpDir, "dir/to"), filepath.Join(tmpDir, "dir/to/walk")}
+	assert.Len(t, paths, 4)
+	assert.Equal(t, paths, expected)
 }
 
 // source https://github.com/golang/go/blob/master/src/path/filepath/example_unix_walk_test.go#L16C1-L29C2
